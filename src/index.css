@@ -1,0 +1,355 @@
+@import "tailwindcss";
+
+/*
+ * Desktop look: system colours and native controls, so
+ * the window looks like a classic toolkit application (XCA / Qt) in light and
+ * dark mode, not like a web page.
+ */
+
+:root {
+  color-scheme: light;
+  --win: #ececec;
+  --win-text: #1d1d1f;
+  --field: #ffffff;
+  --field-text: #1d1d1f;
+  --sel: #2f65ca;
+  --sel-text: #ffffff;
+  --muted: #6e6e73;
+  --line: #c4c4c4;
+  --line-soft: #e3e3e3;
+  --alt-row: #f4f5f5;
+  --header: #f6f6f6;
+  --tab-off: #dcdcdc;
+  --danger: #b3261e;
+  --ok: #1e7a34;
+  --warn-bg: #fff6d6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Ubuntu, Cantarell, sans-serif;
+  font-size: 13px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --win: #2b2b2b;
+    --win-text: #e8e8e8;
+    --field: #1e1e1e;
+    --field-text: #e8e8e8;
+    --sel: #2557b7;
+    --muted: #9a9a9f;
+    --line: #4a4a4a;
+    --line-soft: #333333;
+    --alt-row: #252525;
+    --header: #333333;
+    --tab-off: #242424;
+    --danger: #ff8a80;
+    --ok: #7ad18c;
+    --warn-bg: #3d3520;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--win);
+  color: var(--win-text);
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Native controls: undo the reset so the platform draws them. Kept in the
+   base layer so Tailwind utilities (flex-1, w-full...) still apply. */
+@layer base {
+  button,
+  select,
+  input,
+  textarea {
+    all: revert;
+    font: inherit;
+  }
+
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input:not([type]),
+  select,
+  textarea {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  textarea,
+  input {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  button {
+    white-space: nowrap;
+  }
+}
+
+.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  font-size: 12px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.ok {
+  color: var(--ok);
+}
+
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ---- tabs (QTabWidget) ------------------------------------------------- */
+
+.tabbar {
+  display: flex;
+  gap: 2px;
+  padding: 0 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.tabbar > button {
+  all: unset;
+  padding: 4px 14px 5px;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: var(--tab-off);
+  margin-top: 3px;
+  color: var(--win-text);
+}
+
+.tabbar > button[aria-selected="true"] {
+  background: var(--win);
+  margin-top: 0;
+  padding-bottom: 7px;
+  margin-bottom: -1px;
+  font-weight: 600;
+}
+
+.tabpane {
+  border: 1px solid var(--line);
+  background: var(--win);
+}
+
+/* ---- list views (QTreeView) --------------------------------------------- */
+
+.listview {
+  background: var(--field);
+  color: var(--field-text);
+  border: 1px solid var(--line);
+  overflow: auto;
+}
+
+.listview table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.listview th {
+  position: sticky;
+  top: 0;
+  background: var(--header);
+  font-weight: 400;
+  text-align: left;
+  padding: 3px 6px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listview td {
+  padding: 2px 6px;
+  border-right: 1px solid var(--line-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 20px;
+}
+
+.listview tbody tr:nth-child(even) {
+  background: var(--alt-row);
+}
+
+.listview tbody tr[aria-selected="true"] {
+  background: var(--sel);
+  color: var(--sel-text);
+}
+
+.listview tbody tr[aria-selected="true"] .muted,
+.listview tbody tr[aria-selected="true"] .danger,
+.listview tbody tr[aria-selected="true"] .ok {
+  color: var(--sel-text);
+}
+
+.twisty {
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  font-size: 9px;
+}
+
+/* ---- button column (XCA) ------------------------------------------------ */
+
+.buttoncol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 170px;
+  flex-shrink: 0;
+}
+
+.buttoncol > button {
+  width: 100%;
+}
+
+.buttoncol hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 4px 0;
+}
+
+/* ---- forms (QFormLayout / QGroupBox) ------------------------------------ */
+
+fieldset.group {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 10px 10px;
+  margin: 0;
+}
+
+fieldset.group > legend {
+  padding: 0 4px;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.form > label:not(.check) {
+  text-align: right;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ---- dialogs ------------------------------------------------------------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+.dialog {
+  background: var(--win);
+  color: var(--win-text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.35);
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  width: 560px;
+  max-width: calc(100vw - 32px);
+}
+
+.dialog.wide {
+  width: 820px;
+}
+
+.dialog > header {
+  padding: 8px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+
+.dialog > .body {
+  padding: 12px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dialog > footer {
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.message {
+  border: 1px solid var(--line);
+  background: var(--field);
+  padding: 8px 10px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.message.error {
+  border-color: var(--danger);
+}
+
+.message.warn {
+  background: var(--warn-bg);
+}
+
+.pre {
+  background: var(--field);
+  color: var(--field-text);
+  border: 1px solid var(--line);
+  padding: 6px 8px;
+  max-height: 46vh;
+  overflow: auto;
+  white-space: pre;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.statusbar {
+  border-top: 1px solid var(--line);
+  padding: 2px 8px;
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}

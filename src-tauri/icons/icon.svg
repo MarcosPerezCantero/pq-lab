@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Minimal flat mark: a certificate sheet with a seal. Two colours, no text. -->
+  <rect x="80" y="80" width="864" height="864" rx="190" fill="#f4f4f2"/>
+  <rect x="80.5" y="80.5" width="863" height="863" rx="190" fill="none" stroke="#d6d6d2" stroke-width="3"/>
+  <rect x="262" y="236" width="500" height="560" rx="28" fill="none" stroke="#2b2b2b" stroke-width="40"/>
+  <line x1="352" y1="366" x2="672" y2="366" stroke="#2b2b2b" stroke-width="36" stroke-linecap="round"/>
+  <line x1="352" y1="456" x2="672" y2="456" stroke="#2b2b2b" stroke-width="36" stroke-linecap="round"/>
+  <line x1="352" y1="546" x2="520" y2="546" stroke="#2b2b2b" stroke-width="36" stroke-linecap="round"/>
+  <circle cx="640" cy="660" r="78" fill="#2b2b2b"/>
+  <circle cx="640" cy="660" r="34" fill="#f4f4f2"/>
+</svg>

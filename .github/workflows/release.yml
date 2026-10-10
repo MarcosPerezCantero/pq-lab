@@ -1,0 +1,111 @@
+name: Release
+
+# Builds the same packages as scripts/package-release.sh does locally and
+# attaches them to a draft release:
+#   - macOS universal (.dmg, .zip) and Windows x64 (NSIS installer and
+#     portable .zip, cross-built with MinGW-w64) on one macOS runner;
+#   - Linux x86_64 (.AppImage, .deb) on Ubuntu.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  macos-windows:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-pc-windows-gnu
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cross-compilers for Windows
+        run: brew install mingw-w64 makensis
+
+      - name: Cache OpenSSL sidecars
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/binaries
+          key: openssl-macos-windows-${{ hashFiles('scripts/build-openssl.sh') }}
+
+      - name: Build OpenSSL sidecars
+        run: |
+          TARGET_TRIPLE=universal-apple-darwin ./scripts/build-openssl.sh
+          TARGET_TRIPLE=x86_64-pc-windows-gnu ./scripts/build-openssl.sh
+
+      - run: npm ci
+      - run: npm run tauri build -- --target universal-apple-darwin
+      - run: npm run tauri build -- --target x86_64-pc-windows-gnu --bundles nsis
+      - run: ./scripts/package-release.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-windows
+          path: dist-release/*
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache OpenSSL sidecar
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/binaries
+          key: openssl-linux-${{ hashFiles('scripts/build-openssl.sh') }}
+
+      - name: Build OpenSSL sidecar
+        run: TARGET_TRIPLE=x86_64-unknown-linux-gnu ./scripts/build-openssl.sh
+
+      - run: npm ci
+      - run: npm run tauri build -- --target x86_64-unknown-linux-gnu --bundles appimage,deb
+      - run: ./scripts/package-release.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist-release/*
+
+  publish:
+    needs: [macos-windows, linux]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: out
+        run: |
+          rm -f SHA256SUMS.txt
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          flags=(--draft --title "PQ Lab $TAG" --notes "Herramienta de laboratorio. No es una CA de producción. Binarios sin firmar.")
+          [[ "$TAG" == *-* ]] && flags+=(--prerelease)
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" "${flags[@]}" out/*
